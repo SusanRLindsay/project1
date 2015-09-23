@@ -1,9 +1,7 @@
 package com.example.susan.popularmovies;
 
 import android.content.Context;
-import android.content.SharedPreferences;
 import android.os.AsyncTask;
-import android.preference.PreferenceManager;
 import android.util.Log;
 
 import org.json.JSONArray;
@@ -28,7 +26,7 @@ public class FetchMovieDetails extends AsyncTask<String, Void,List< MovieDetails
     public static final String BASE_URL = "http://api.themoviedb.org/3/discover/movie?";
     public static final String SORT_POPULAR_PARAM = "sort_by=popularity.desc";
     public static final String SORT_RATING_PARAM = "sort_by=vote_average.desc";
-    public static final String API_KEY = "&api_key=deleted";
+    public static final String API_KEY = "&api_key=f0d4a47494b3cf5f3e48649bc40b99c5";
     List<MovieDetails> results = new ArrayList<>();
     private final Context mContext;
     private MovieAdapter mAdapter;
@@ -44,12 +42,8 @@ public class FetchMovieDetails extends AsyncTask<String, Void,List< MovieDetails
     protected List< MovieDetails> doInBackground(String... params) {
 
         String sortParameter = SORT_POPULAR_PARAM;
-        Log.v(LOG_TAG, "starting to aquire movie info");
-        SharedPreferences sharedPrefs =
-                PreferenceManager.getDefaultSharedPreferences(mContext);
-        String sortOrder = sharedPrefs.getString(
-                mContext.getString(R.string.pref_order_key),
-                mContext.getString(R.string.pref_order_popular));
+        //Log.v(LOG_TAG, "starting to aquire movie info");
+        String sortOrder = params[0].toString();
 
         if (sortOrder.equals(mContext.getString(R.string.pref_order_rating))) {
             sortParameter = SORT_RATING_PARAM;
@@ -64,10 +58,6 @@ public class FetchMovieDetails extends AsyncTask<String, Void,List< MovieDetails
         //Will contain the raw JSON response as a string.
         String jsonStr;
         try {
-            // Construct the URL for the  themoviedb.org query
-            //                Uri builtUri = Uri.parse(BASE_URL).buildUpon()
-            //                        .appendEncodedPath(sortParameter)
-            //                        .appendEncodedPath(API_KEY).build();
             String urlString = BASE_URL + sortParameter + API_KEY;
 
             URL url = new URL(urlString);
@@ -99,14 +89,14 @@ public class FetchMovieDetails extends AsyncTask<String, Void,List< MovieDetails
             }
             jsonStr = buffer.toString();
             try {
-                Log.v(LOG_TAG, "sending movie info to parser");
+                //Log.v(LOG_TAG, "sending movie info to parser");
                 return getMovieDataFromJson(jsonStr);
             } catch (JSONException e) {
                 Log.e(LOG_TAG, "Error ", e);
             }
         } catch (IOException e) {
             Log.e(LOG_TAG, "Error ", e);
-            // If the code didn't successfully get the weather data, there's no point in attemping
+            // If the code didn't successfully get the movie data, there's no point in attemping
             // to parse it.
             return null;
         } finally {
@@ -128,20 +118,21 @@ public class FetchMovieDetails extends AsyncTask<String, Void,List< MovieDetails
         //     These are the names of the JSON objects that need to be extracted.
         final String POSTER_BASE_URL = " http://image.tmdb.org/t/p/w185";
         final String MDB_RESULTS = "results";
+        final String MDB_ID = "id";
         final String MDB_TITLE = "original_title";
         final String MDB_PLOT = "overview";
         final String MDB_POSTER_PATH = "poster_path";
         final String MDB_USER_RATING = "vote_average";
         final String MDB_RELEASE_DATE = "release_date";
 
-        Log.v(LOG_TAG, "beginning movie info parse");
+        //Log.v(LOG_TAG, "beginning movie info parse");
 
         JSONObject movieDetailJson = new JSONObject(jsonStr);
         JSONArray movieDetailJsonJSONArray = movieDetailJson.getJSONArray(MDB_RESULTS);
 
 
         for (int i = 0; i < movieDetailJsonJSONArray.length(); i++) {
-            //for (int i = 0; i < MovieAdapter.MAX_MOVIES; i++) {
+            Long movieId;
             String title;
             String plot;
             String poster_path;
@@ -150,28 +141,37 @@ public class FetchMovieDetails extends AsyncTask<String, Void,List< MovieDetails
 
             // Get the JSON object representing the movie
             JSONObject movieJSONObj = movieDetailJsonJSONArray.getJSONObject(i);
+            movieId = movieJSONObj.getLong(MDB_ID);
             title = movieJSONObj.getString(MDB_TITLE);
             plot = movieJSONObj.getString(MDB_PLOT);
             poster_path = movieJSONObj.getString(MDB_POSTER_PATH);
             user_rating = movieJSONObj.getDouble(MDB_USER_RATING);
             release_date = movieJSONObj.getString(MDB_RELEASE_DATE);
-            results.add(new MovieDetails(title,plot, poster_path,user_rating,release_date,i));
+            results.add(new MovieDetails(
+                    movieId,
+                    title,
+                    plot,
+                    poster_path,
+                    user_rating,
+                    release_date,
+                    i));
 
-            Log.v(LOG_TAG, "JSON parse: title " + title + " url: " + poster_path);
+            //Log.v(LOG_TAG, "JSON parse: title " + title + " url: " + poster_path);
         }
-        Log.v(LOG_TAG, "returning movie info parse");
+        //Log.v(LOG_TAG, "returning movie info parse");
         return results;
     }
 
     @Override
     protected void onPostExecute(List< MovieDetails> result) {
 
-        Log.v(LOG_TAG, "on postexecute of movie info");
+        //Log.v(LOG_TAG, "on postexecute of movie info");
         if (result != null) {
             mAdapter.clear();
             for (MovieDetails details : result) {
                 mAdapter.add(details);
             }
+            mAdapter.notifyDataSetChanged();
         }
     }
 }
