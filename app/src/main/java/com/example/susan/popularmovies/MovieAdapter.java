@@ -10,7 +10,6 @@ import android.widget.ImageView;
 import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Created by Susan on 8/24/2015.
@@ -19,14 +18,15 @@ public class MovieAdapter extends ArrayAdapter<MovieDetails> {
 
     private final String LOG_TAG = MovieAdapter.class.getSimpleName();
     Context mContext;
-    List<MovieDetails> movies = new ArrayList<>();
+    ViewHolder viewHolder;
+    ArrayList<MovieDetails> movies = new ArrayList<>();
 
 
     // Here, we initialize the ArrayAdapter's internal storage for the context and the list.
     // the second argument is used when the ArrayAdapter is populating a single TextView.
     // Because this is a custom adapter for two TextViews and an ImageView, the adapter is not
     // going to use this second argument, so it can be any value. Here, we used 0.
-    public MovieAdapter (Context context, List<MovieDetails> movies){
+    public MovieAdapter(Context context, ArrayList<MovieDetails> movies){
         super(context, R.layout.grid_item_layout, movies);
         this.movies = movies;
         mContext = context;
@@ -40,15 +40,42 @@ public class MovieAdapter extends ArrayAdapter<MovieDetails> {
             LayoutInflater inflater = (LayoutInflater) mContext
                     .getSystemService(Context.LAYOUT_INFLATER_SERVICE);
             convertView = inflater.inflate(R.layout.grid_item_layout, parent, false);
-        }
 
-        ImageView imageView = (ImageView)convertView.findViewById(R.id.grid_image);
-        String posterUrl =  details.getPosterPath();
-        Picasso.with(mContext).setLoggingEnabled(true);
+
+            // initialize the view holder
+            viewHolder = new ViewHolder();
+            viewHolder.moviePoster = (ImageView) convertView.findViewById(R.id.grid_image);
+            convertView.setTag(viewHolder);
+        }else {
+            // recycle the already inflated view
+            viewHolder = (ViewHolder) convertView.getTag();
+        }
+        String posterUrl = details.getPosterPath();
+        //Picasso.with(mContext).setLoggingEnabled(true);
         Picasso.with(mContext)
                 .load(MovieDetails.BASE_URL + MovieDetails.POSTER_SIZE + posterUrl)
-                .into((ImageView) imageView);
+                .into((ImageView) viewHolder.moviePoster);
+        return convertView;
+    }
 
-        return imageView;
+
+
+    public void setMovies(ArrayList<MovieDetails> movies){
+        if (movies != null) {
+            this.clear();
+            for (MovieDetails details : movies) {
+                this.add(details);
+            }
+            notifyDataSetChanged();
+        }
+    }
+
+    public MovieDetails getMovie(int index){
+        return (MovieDetails)movies.get(index);
+    }
+
+    static class ViewHolder {
+
+        ImageView moviePoster;
     }
 }

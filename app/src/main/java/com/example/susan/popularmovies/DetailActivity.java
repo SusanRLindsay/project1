@@ -25,7 +25,7 @@ public class DetailActivity extends FragmentActivity {
         setContentView(R.layout.activity_detail);
         if (savedInstanceState == null) {
             getSupportFragmentManager().beginTransaction()
-                    .add(R.id.container, new DetailFragment())
+                    .add(R.id.container2, new DetailFragment())
                     .commit();
         }
     }
